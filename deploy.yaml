@@ -1,0 +1,65 @@
+- name : Create APP Layer
+  hosts : PRO
+  become : yes
+  vars :
+    USERNAME : tom_user
+    TOM_URL : https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.56/bin/apache-tomcat-9.0.56.tar.gz
+    TOM_DIR : /tomcat
+    WEB_APP : /tomcat/apache-tomcat-9.0.56/webapps
+    WAR_URL : http://34.72.65.231:8081/repository/maven-snapshots/com/ksapp/ks/3-SNAPSHOT/ks-3-20211230.143909-4.war
+    WEB_DEST : /tomcat/apache-tomcat-9.0.56/webapps/ks.war
+  tasks :
+    - name : create an user for tomcat
+      ansible.builtin.user:
+        name:  tom_user
+
+    - name: Create a directory if it does not exist
+      ansible.builtin.file:
+        path: "{{TOM_DIR}}"
+        state: directory
+        owner: "{{USERNAME}}"
+        group: "{{USERNAME}}"
+        mode: '0755'
+
+    - name : downloading tomcat
+      ansible.builtin.unarchive:
+         src: "{{TOM_URL}}"
+         dest: "{{TOM_DIR}}" 
+         remote_src : yes
+      become_user : "{{USERNAME}}"
+
+    - name : find the files and dir from webapps
+      find :
+         paths:  "{{WEB_APP}}"
+         file_type: any
+      register : out
+
+    - name : removing old artifacts
+      file : 
+        path : "{{WEB_APP}}"
+        state : "{{item}}"
+        owner: "{{USERNAME}}"
+        group: "{{USERNAME}}"
+      loop : 
+        - absent
+        - directory      
+
+    - name : Downloading war pack
+      get_url :
+        url : "{{WAR_URL}}"
+        dest : "{{WEB_DEST}}"
+      become_user : "{{USERNAME}}"
+
+    - name : chek tomcat is running or not
+      shell : ps -ef | grep tomcat | grep -v grep
+      register : out
+      ignore_errors : true
+      become_user : "{{USERNAME}}"
+
+    - name : Starting tomcat 
+      shell : "nohup sh /tomcat/apache-tomcat-9.0.56/bin/startup.sh"
+      when : out is failed
+
+    - name : Restarting Tomcat 
+      shell : "nohup sh /tomcat/apache-tomcat-9.0.56/bin/shutdown.sh && nohup sh /tomcat/apache-tomcat-9.0.56/bin/startup.sh"
+      when : out is success   
