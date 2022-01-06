@@ -6,7 +6,7 @@
     TOM_URL : https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.56/bin/apache-tomcat-9.0.56.tar.gz
     TOM_DIR : /tomcat
     WEB_APP : /tomcat/apache-tomcat-9.0.56/webapps
-    WEB_DEST : /tomcat/apache-tomcat-9.0.56/webapps/ks.war
+    WEB_DEST : /tomcat/apache-tomcat-9.0.56/webapps/ks.ar
   tasks :
     - name : create an user for tomcat
       ansible.builtin.user:
@@ -17,7 +17,7 @@
         path: "{{TOM_DIR}}"
         state: directory
         owner: "{{USERNAME}}"
-        group: "{{USERNAME}}"
+        group: "{{USERAME}}"
         mode: '0755'
 
     - name : downloading tomcat
@@ -56,7 +56,7 @@
       become_user : "{{USERNAME}}"
 
     - name : Starting tomcat 
-      shell : "nohup sh /tomcat/apache-tomcat-9.0.56/bin/startup.sh"
+      shell : "nohup sh /tomcat/apache-tomcat-9.0.56/bin/statup.sh"
       when : out is failed
 
     - name : Restarting Tomcat 
